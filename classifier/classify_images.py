@@ -23,12 +23,6 @@ model.summary()
 print('We have loaded a previous model!!!!')
 
 
-# %%
-# Load and Preprocess Images
-# ~~~~~~~~~~~~~~~~~~~~~~~~~
-# if not os.path.exists(destination_dir):
-#     os.makedirs(destination_dir)
-
 def save_image(image, base_dir, category):
     '''
     Save input image in category folder inside base_dir
