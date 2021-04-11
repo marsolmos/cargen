@@ -35,9 +35,11 @@ class ClipConstraint(Constraint):
 	def get_config(self):
 		return {'clip_value': self.clip_value}
 
+
 # calculate wasserstein loss
 def wasserstein_loss(y_true, y_pred):
 	return backend.mean(y_true * y_pred)
+
 
 # define the standalone critic model
 def define_critic(in_shape=(28,28,1)):
@@ -63,6 +65,7 @@ def define_critic(in_shape=(28,28,1)):
 	model.compile(loss=wasserstein_loss, optimizer=opt)
 	return model
 
+
 # define the standalone generator model
 def define_generator(latent_dim):
 	# weight initialization
@@ -86,6 +89,7 @@ def define_generator(latent_dim):
 	model.add(Conv2D(1, (7,7), activation='tanh', padding='same', kernel_initializer=init))
 	return model
 
+
 # define the combined generator and critic model, for updating the generator
 def define_gan(generator, critic):
 	# make weights in the critic not trainable
@@ -103,6 +107,7 @@ def define_gan(generator, critic):
 	model.compile(loss=wasserstein_loss, optimizer=opt)
 	return model
 
+
 # load images
 def load_real_samples():
 	# load dataset
@@ -118,6 +123,7 @@ def load_real_samples():
 	X = (X - 127.5) / 127.5
 	return X
 
+
 # select real samples
 def generate_real_samples(dataset, n_samples):
 	# choose random instances
@@ -128,6 +134,7 @@ def generate_real_samples(dataset, n_samples):
 	y = -ones((n_samples, 1))
 	return X, y
 
+
 # generate points in latent space as input for the generator
 def generate_latent_points(latent_dim, n_samples):
 	# generate points in the latent space
@@ -135,6 +142,7 @@ def generate_latent_points(latent_dim, n_samples):
 	# reshape into a batch of inputs for the network
 	x_input = x_input.reshape(n_samples, latent_dim)
 	return x_input
+
 
 # use the generator to generate n fake examples, with class labels
 def generate_fake_samples(generator, latent_dim, n_samples):
@@ -145,6 +153,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 	# create class labels with 1.0 for 'fake'
 	y = ones((n_samples, 1))
 	return X, y
+
 
 # generate samples and save as a plot and save the model
 def summarize_performance(step, g_model, latent_dim, n_samples=100):
@@ -168,6 +177,8 @@ def summarize_performance(step, g_model, latent_dim, n_samples=100):
 	filename2 = 'models/model_saved.h5'
 	g_model.save(filename2)
 	print('>Saved: %s and %s' % (filename1, filename2))
+	return
+
 
 # create a line plot of loss for the gan and save to file
 def plot_history(d1_hist, d2_hist, g_hist):
@@ -176,8 +187,10 @@ def plot_history(d1_hist, d2_hist, g_hist):
 	pyplot.plot(d2_hist, label='crit_fake')
 	pyplot.plot(g_hist, label='gen')
 	pyplot.legend()
-	pyplot.savefig('model/images/plot_line_plot_loss.png')
+	pyplot.savefig('models/images/plot_line_plot_loss.png')
 	pyplot.close()
+	return
+
 
 # train the generator and critic
 def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=10, n_batch=64, n_critic=5):
@@ -221,9 +234,14 @@ def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=10, n_batch
 			summarize_performance(i, g_model, latent_dim)
 	# line plots of loss
 	plot_history(c1_hist, c2_hist, g_hist)
+	return
+
 
 # size of the latent space
 latent_dim = 50
+# define GPU usage for training
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0],True)
 # create the critic
 critic = define_critic()
 # create the generator
