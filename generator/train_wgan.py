@@ -28,7 +28,6 @@ from matplotlib import pyplot
 # Environment variables
 base_dir = "D:/Data Warehouse/thecarconnection/pictures" # Base directory
 category = "front" # Category that we want to use for image generation
-latent_dim = 50 # Size of the latent space
 IMG_WIDTH = 56 # Target width of images when being loaded (in pixels)
 IMG_HEIGHT = 56 # Target height of images when being loaded (in pixels)
 
@@ -182,37 +181,6 @@ def load_real_samples(base_dir, category, target_size=(112, 112)):
 
     return dataset
 
-## DEPRECATED
-# def load_data():
-# 	# Images path
-# 	base_dir = "D:/Data Warehouse/thecarconnection/pictures"
-# 	category = "front"
-# 	cat_dir = os.path.join(base_dir, category)
-#
-# 	label_mode = 'categorical'
-# 	color_mode = 'grayscale'
-# 	batch_size = 100
-# 	image_size = (224, 224)
-# 	shuffle = True
-# 	seed = 123
-# 	validation_split = 0.2
-# 	interpolation='bilinear'
-#
-# 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-# 	        base_dir, label_mode=label_mode,
-# 	        class_names=None, color_mode=color_mode, batch_size=batch_size, image_size=image_size,
-# 	        shuffle=shuffle, seed=seed, validation_split=validation_split, subset="training",
-# 	        interpolation=interpolation
-# 	    )
-#
-# 	validation_ds = tf.keras.preprocessing.image_dataset_from_directory(
-# 	        base_dir, label_mode=label_mode,
-# 	        class_names=None, color_mode=color_mode, batch_size=batch_size, image_size=image_size,
-# 	        shuffle=shuffle, seed=seed, validation_split=validation_split, subset="validation",
-# 	        interpolation=interpolation
-# 	    )
-# 	return train_ds
-
 
 # select real samples
 def generate_real_samples(dataset, n_samples):
@@ -246,7 +214,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 
 
 # generate samples and save as a plot and save the model
-def summarize_performance(step, g_model, latent_dim, n_samples=100):
+def summarize_performance(step, g_model, latent_dim, base_dir, n_samples=100):
 	# prepare fake examples
 	X, _ = generate_fake_samples(g_model, latent_dim, n_samples)
 	# scale from [-1,1] to [0,1]
@@ -260,30 +228,49 @@ def summarize_performance(step, g_model, latent_dim, n_samples=100):
 		# plot raw pixel data
 		pyplot.imshow(X[i, :, :, 0], cmap='gray_r')
 	# save plot to file
-	filename1 = 'models/images/generated_plot_%04d.png' % (step+1)
-	pyplot.savefig(filename1)
+	image_name = 'generated_plot_%04d.png' % (step+1)
+	image_path = os.path.join(base_dir, 'images')
+	# create directory for images (if necessary)
+	if not os.path.isdir(image_path):
+		os.makedirs(image_path)
+	image_path = os.path.join(image_path, image_name)
+	pyplot.savefig(image_path)
 	pyplot.close()
 	# save the generator model
-	filename2 = 'models/model_saved.h5'
-	g_model.save(filename2)
-	print('>Saved: %s and %s' % (filename1, filename2))
+	model_path = os.path.join(base_dir, 'model_saved.h5')
+	g_model.save(model_path)
+	print('>Saved: %s and %s' % (image_path, model_path))
 	return
 
 
 # create a line plot of loss for the gan and save to file
-def plot_history(d1_hist, d2_hist, g_hist):
+def plot_history(d1_hist, d2_hist, g_hist, base_dir):
 	# plot history
 	pyplot.plot(d1_hist, label='crit_real')
 	pyplot.plot(d2_hist, label='crit_fake')
 	pyplot.plot(g_hist, label='gen')
 	pyplot.legend()
-	pyplot.savefig('models/images/plot_line_plot_loss.png')
+	save_path = os.path.join(base_dir, 'images')
+	# create directory for images (if necessary)
+	if not os.path.isdir(save_path):
+		os.makedirs(save_path)
+	save_path = os.path.join(save_path, 'plot_line_plot_loss.png')
+	pyplot.savefig(save_path)
 	pyplot.close()
 	return
 
 
 # train the generator and critic
 def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=64, n_critic=5):
+	# base directory where to save generator model and generated images
+	model_name = "models_" + str(latent_dim) +\
+						"_" + str(n_epochs) +\
+						"_" + str(n_batch) +\
+						"_" + str(n_critic)
+	# create directory for images and model saved (if necessary)
+	base_dir = os.path.join('models', model_name)
+	if not os.path.isdir(base_dir):
+		os.makedirs(base_dir)
 	# calculate the number of batches per training epoch
 	bat_per_epo = int(dataset.shape[0] / n_batch)
 	# calculate the number of training iterations
@@ -294,7 +281,7 @@ def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 	c1_hist, c2_hist, g_hist = list(), list(), list()
 	# manually enumerate epochs
 	for i in range(n_steps):
-		# update the critic more than the generator
+		# update the critic "n_critic times more" than the generator
 		c1_tmp, c2_tmp = list(), list()
 		for _ in range(n_critic):
 			# get randomly selected 'real' samples
@@ -321,22 +308,43 @@ def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 		print('>%d, c1=%.3f, c2=%.3f g=%.3f' % (i+1, c1_hist[-1], c2_hist[-1], g_loss))
 		# evaluate the model performance every 'epoch'
 		if (i+1) % bat_per_epo == 0:
-			summarize_performance(i, g_model, latent_dim)
+			summarize_performance(i, g_model, latent_dim, base_dir)
 	# line plots of loss
-	plot_history(c1_hist, c2_hist, g_hist)
+	plot_history(c1_hist, c2_hist, g_hist, base_dir)
 	return
 
 
 # define GPU usage for training
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0],True)
-# create the critic
-critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1))
-# create the generator
-generator = define_generator(latent_dim)
-# create the gan
-gan_model = define_gan(generator, critic)
-# load image data
-dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
-# train model
-train(generator, critic, gan_model, dataset, latent_dim)
+
+# define all grid search parameters
+all_latent_dim = [25, 50, 100, 150, 200] # Size of the latent space
+all_n_epochs = [100] # Number of training epochs
+all_n_batch = [8, 16, 32, 64, 128, 256] # Size of training batches
+all_n_critic = [1, 2, 3, 4, 5, 6, 7, 8] # Number of times that the critic updates per each update of generator
+
+# iterate for all posible values
+for latent_dim in all_latent_dim:
+	for n_epochs in all_n_epochs:
+		for n_batch in all_n_batch:
+			for n_critic in all_n_critic:
+				# create the critic
+				critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1))
+				# create the generator
+				generator = define_generator(latent_dim)
+				# create the gan
+				gan_model = define_gan(generator, critic)
+				# load image data
+				dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
+				# train model
+				train(
+					generator,
+					critic,
+					gan_model,
+					dataset,
+					latent_dim=latent_dim,
+					n_epochs=n_epochs,
+					n_batch=n_batch,
+					n_critic=n_critic
+					)

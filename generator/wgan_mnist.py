@@ -250,6 +250,5 @@ generator = define_generator(latent_dim)
 gan_model = define_gan(generator, critic)
 # load image data
 dataset = load_real_samples()
-print(dataset.shape)
 # train model
 train(generator, critic, gan_model, dataset, latent_dim)
