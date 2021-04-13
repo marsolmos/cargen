@@ -52,7 +52,7 @@ The basic steps to follow to use this repo are as follows:
 
 
 ## Acknowledgement ##
-WGAN basic implementation: https://machinelearningmastery.com/how-to-code-a-wasserstein-generative-adversarial-network-wgan-from-scratch/
-The Car Connection Dataset: https://github.com/nicolas-gervais/predicting-car-price-from-scraped-data/tree/master/picture-scraper
-WGAN Paper: https://arxiv.org/abs/1701.07875
-BoolGAN Paper: https://arxiv.org/abs/2006.14380
+- WGAN basic implementation: https://machinelearningmastery.com/how-to-code-a-wasserstein-generative-adversarial-network-wgan-from-scratch/
+- The Car Connection Dataset: https://github.com/nicolas-gervais/predicting-car-price-from-scraped-data/tree/master/picture-scraper
+- WGAN Paper: https://arxiv.org/abs/1701.07875
+- BoolGAN Paper: https://arxiv.org/abs/2006.14380
