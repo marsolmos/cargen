@@ -319,32 +319,37 @@ physical_devices = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0],True)
 
 # define all grid search parameters
-all_latent_dim = [25, 50, 100, 150, 200] # Size of the latent space
-all_n_epochs = [100] # Number of training epochs
-all_n_batch = [8, 16, 32, 64, 128, 256] # Size of training batches
 all_n_critic = [1, 2, 3, 4, 5, 6, 7, 8] # Number of times that the critic updates per each update of generator
+all_latent_dim = [25, 50, 100, 150, 200] # Size of the latent space
+all_n_epochs = [50] # Number of training epochs
+all_n_batch = [8, 16, 32, 64, 128, 256] # Size of training batches
 
 # iterate for all posible values
-for latent_dim in all_latent_dim:
-	for n_epochs in all_n_epochs:
-		for n_batch in all_n_batch:
-			for n_critic in all_n_critic:
-				# create the critic
-				critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1))
-				# create the generator
-				generator = define_generator(latent_dim)
-				# create the gan
-				gan_model = define_gan(generator, critic)
-				# load image data
-				dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
-				# train model
-				train(
-					generator,
-					critic,
-					gan_model,
-					dataset,
-					latent_dim=latent_dim,
-					n_epochs=n_epochs,
-					n_batch=n_batch,
-					n_critic=n_critic
-					)
+for n_critic in all_n_critic:
+	for latent_dim in all_latent_dim:
+		for n_epochs in all_n_epochs:
+			for n_batch in all_n_batch:
+				try:
+					# create the critic
+					critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1))
+					# create the generator
+					generator = define_generator(latent_dim)
+					# create the gan
+					gan_model = define_gan(generator, critic)
+					# load image data
+					dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
+					# train model
+					print('\n\n\n\n\n\n\n\n\n\n\n\n')
+					print('TRAINING: n_crtic = {} | latent_dim = {} | n_batch = {}'.format(n_critic, latent_dim, n_batch))
+					train(
+						generator,
+						critic,
+						gan_model,
+						dataset,
+						latent_dim=latent_dim,
+						n_epochs=n_epochs,
+						n_batch=n_batch,
+						n_critic=n_critic
+						)
+				except:
+					pass
