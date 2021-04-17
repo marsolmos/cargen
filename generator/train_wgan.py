@@ -30,6 +30,17 @@ base_dir = "D:/Data Warehouse/thecarconnection/pictures" # Base directory
 category = "front" # Category that we want to use for image generation
 IMG_WIDTH = 56 # Target width of images when being loaded (in pixels)
 IMG_HEIGHT = 56 # Target height of images when being loaded (in pixels)
+lr = 0.000005 # Learning rate for critic and generator optimizers
+
+# define all grid search parameters
+all_n_critic = [1] # Number of times that the critic updates per each update of generator
+all_latent_dim = [20] # Size of the latent space
+all_n_epochs = [50] # Number of training epochs
+all_n_batch = [16] # Size of training batches
+
+# define GPU usage for training
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0],True)
 
 # clip model weights to a given hypercube
 class ClipConstraint(Constraint):
@@ -52,7 +63,7 @@ def wasserstein_loss(y_true, y_pred):
 
 
 # define the standalone critic model
-def define_critic(in_shape=(28,28,1)):
+def define_critic(in_shape=(28,28,1), lr=0.00005):
 	# weight initialization
 	init = RandomNormal(stddev=0.02)
 	# weight constraint
@@ -83,7 +94,7 @@ def define_critic(in_shape=(28,28,1)):
 	model.add(Flatten())
 	model.add(Dense(1))
 	# compile model
-	opt = RMSprop(lr=0.00005)
+	opt = RMSprop(lr=lr)
 	model.compile(loss=wasserstein_loss, optimizer=opt)
 	return model
 
@@ -125,7 +136,7 @@ def define_generator(latent_dim):
 
 
 # define the combined generator and critic model, for updating the generator
-def define_gan(generator, critic):
+def define_gan(generator, critic, lr=0.00005):
 	# make weights in the critic not trainable
 	for layer in critic.layers:
 		if not isinstance(layer, BatchNormalization):
@@ -137,7 +148,7 @@ def define_gan(generator, critic):
 	# add the critic
 	model.add(critic)
 	# compile model
-	opt = RMSprop(lr=0.00005)
+	opt = RMSprop(lr=lr)
 	model.compile(loss=wasserstein_loss, optimizer=opt)
 	return model
 
@@ -314,16 +325,6 @@ def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 	return
 
 
-# define GPU usage for training
-physical_devices = tf.config.experimental.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0],True)
-
-# define all grid search parameters
-all_n_critic = [1, 2, 3, 4, 5, 6, 7, 8] # Number of times that the critic updates per each update of generator
-all_latent_dim = [25, 50, 100, 150, 200] # Size of the latent space
-all_n_epochs = [50] # Number of training epochs
-all_n_batch = [8, 16, 32, 64, 128, 256] # Size of training batches
-
 # iterate for all posible values
 for n_critic in all_n_critic:
 	for latent_dim in all_latent_dim:
@@ -331,11 +332,11 @@ for n_critic in all_n_critic:
 			for n_batch in all_n_batch:
 				try:
 					# create the critic
-					critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1))
+					critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1), lr=lr)
 					# create the generator
 					generator = define_generator(latent_dim)
 					# create the gan
-					gan_model = define_gan(generator, critic)
+					gan_model = define_gan(generator, critic, lr=lr)
 					# load image data
 					dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
 					# train model
