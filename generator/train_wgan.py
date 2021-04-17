@@ -35,10 +35,10 @@ IMG_HEIGHT = 56 # Target height of images when being loaded (in pixels)
 lr = 0.000005 # Learning rate for critic and generator optimizers
 
 # define all grid search parameters
-all_n_critic = [1, 2] # Number of times that the critic updates per each update of generator
 all_latent_dim = [10, 20] # Size of the latent space
 all_n_epochs = [50] # Number of training epochs
 all_n_batch = [8, 12, 16] # Size of training batches
+all_n_critic = [1, 2] # Number of times that the critic updates per each update of generator
 
 # define GPU usage for training
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
