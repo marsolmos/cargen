@@ -27,16 +27,18 @@ from matplotlib import pyplot
 
 # Environment variables
 base_dir = "D:/Data Warehouse/thecarconnection/pictures" # Base directory
-category = "front" # Category that we want to use for image generation
+categories = [item for item in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, item))] # Category that we want to use for image generation
+categories.remove("other") # Don't generate images from category "other"
+categories.remove("unknown") # Don't generate images from category "unknown"
 IMG_WIDTH = 56 # Target width of images when being loaded (in pixels)
 IMG_HEIGHT = 56 # Target height of images when being loaded (in pixels)
 lr = 0.000005 # Learning rate for critic and generator optimizers
 
 # define all grid search parameters
-all_n_critic = [1] # Number of times that the critic updates per each update of generator
-all_latent_dim = [20] # Size of the latent space
+all_n_critic = [1, 2] # Number of times that the critic updates per each update of generator
+all_latent_dim = [10, 20] # Size of the latent space
 all_n_epochs = [50] # Number of training epochs
-all_n_batch = [16] # Size of training batches
+all_n_batch = [8, 12, 16] # Size of training batches
 
 # define GPU usage for training
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -272,9 +274,10 @@ def plot_history(d1_hist, d2_hist, g_hist, base_dir):
 
 
 # train the generator and critic
-def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=64, n_critic=5):
+def train(g_model, c_model, gan_model, dataset, category, latent_dim=50, n_epochs=100, n_batch=64, n_critic=5):
 	# base directory where to save generator model and generated images
-	model_name = "models_" + str(latent_dim) +\
+	model_name = "model_" + category +\
+						"_" + str(latent_dim) +\
 						"_" + str(n_epochs) +\
 						"_" + str(n_batch) +\
 						"_" + str(n_critic)
@@ -326,31 +329,33 @@ def train(g_model, c_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 
 
 # iterate for all posible values
-for n_critic in all_n_critic:
-	for latent_dim in all_latent_dim:
-		for n_epochs in all_n_epochs:
-			for n_batch in all_n_batch:
-				try:
-					# create the critic
-					critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1), lr=lr)
-					# create the generator
-					generator = define_generator(latent_dim)
-					# create the gan
-					gan_model = define_gan(generator, critic, lr=lr)
-					# load image data
-					dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
-					# train model
-					print('\n\n\n\n\n\n\n\n\n\n\n\n')
-					print('TRAINING: n_crtic = {} | latent_dim = {} | n_batch = {}'.format(n_critic, latent_dim, n_batch))
-					train(
-						generator,
-						critic,
-						gan_model,
-						dataset,
-						latent_dim=latent_dim,
-						n_epochs=n_epochs,
-						n_batch=n_batch,
-						n_critic=n_critic
-						)
-				except:
-					pass
+for category in categories:
+	for n_critic in all_n_critic:
+		for latent_dim in all_latent_dim:
+			for n_epochs in all_n_epochs:
+				for n_batch in all_n_batch:
+					try:
+						# create the critic
+						critic = define_critic(in_shape=(IMG_WIDTH, IMG_HEIGHT, 1), lr=lr)
+						# create the generator
+						generator = define_generator(latent_dim)
+						# create the gan
+						gan_model = define_gan(generator, critic, lr=lr)
+						# load image data
+						dataset = load_real_samples(base_dir, category, target_size=(IMG_WIDTH, IMG_HEIGHT))
+						# train model
+						print('\n\n\n\n\n\n\n\n\n\n\n\n')
+						print('TRAINING: n_crtic = {} | latent_dim = {} | n_batch = {}'.format(n_critic, latent_dim, n_batch))
+						train(
+							generator,
+							critic,
+							gan_model,
+							dataset,
+							category=category,
+							latent_dim=latent_dim,
+							n_epochs=n_epochs,
+							n_batch=n_batch,
+							n_critic=n_critic
+							)
+					except:
+						pass
