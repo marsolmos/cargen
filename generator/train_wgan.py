@@ -1,6 +1,5 @@
 # example of a wgan for generating handwritten digits
 import os
-import cv2
 import numpy as np
 from numpy import expand_dims
 from numpy import mean
@@ -37,8 +36,8 @@ lr = 0.000005 # Learning rate for critic and generator optimizers
 # define all grid search parameters
 all_latent_dim = [10, 20] # Size of the latent space
 all_n_epochs = [50] # Number of training epochs
-all_n_batch = [8, 12, 16] # Size of training batches
-all_n_critic = [1, 2] # Number of times that the critic updates per each update of generator
+all_n_batch = [2, 4, 8, 16] # Size of training batches
+all_n_critic = [1, 2, 3, 4, 5] # Number of times that the critic updates per each update of generator
 
 # define GPU usage for training
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -227,15 +226,15 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 
 
 # generate samples and save as a plot and save the model
-def summarize_performance(step, g_model, latent_dim, base_dir, n_samples=100):
+def summarize_performance(step, g_model, latent_dim, base_dir, n_samples=25):
 	# prepare fake examples
 	X, _ = generate_fake_samples(g_model, latent_dim, n_samples)
 	# scale from [-1,1] to [0,1]
 	X = (X + 1) / 2.0
 	# plot images
-	for i in range(10 * 10):
+	for i in range(5 * 5):
 		# define subplot
-		pyplot.subplot(10, 10, 1 + i)
+		pyplot.subplot(5, 5, 1 + i)
 		# turn off axis
 		pyplot.axis('off')
 		# plot raw pixel data
