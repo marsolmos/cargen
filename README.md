@@ -38,7 +38,9 @@ Detailed Explaination: https://marsolmos.com/files/projects/cargen_project.html
 - Other
 - Unknown (for images with confidence threshold under 70%)
 
-To achieve this, an image classifier has been previously trained with 3000 manually labelled images from the original dataset. The code for the training of this model can be found on [classifier/train_model.py](https://github.com/marsolmos/cargen/blob/main/classifier/train_model.py) and the classification script that runs inference on the trained model on [classifier/classify_images.py](https://github.com/marsolmos/cargen/blob/main/classifier/classify_images.py).
+To achieve this, an image classifier ConvNet has been previously trained with 3000 manually labelled images from the original dataset. The code for the training of this model can be found on [classifier/train_model.py](https://github.com/marsolmos/cargen/blob/main/classifier/train_model.py) and the classification script that runs inference on the trained model on [classifier/classify_images.py](https://github.com/marsolmos/cargen/blob/main/classifier/classify_images.py).
+
+The images classified by this image classifier ConvNet [can be downloaded here](https://drive.google.com/file/d/1D2vt7PZ8x5IFGgSPRNDJe23l5nkv8DCG/view?usp=sharing).
 
 
 ## Generating images with WGAN on Tensorflow GPU ##
