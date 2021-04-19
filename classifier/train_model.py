@@ -1,7 +1,11 @@
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
 import zipfile
 import matplotlib.pyplot as plt
+
+from tensorflow.keras import layers
+from tensorflow.keras import Model
+from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
 MODEL_NAME = 'CarClass-3'
@@ -61,10 +65,6 @@ validation_generator = val_datagen.flow_from_directory(
         target_size=(150, 150),
         batch_size=20,
         class_mode='categorical')
-
-from tensorflow.keras import layers
-from tensorflow.keras import Model
-from tensorflow.keras.optimizers import RMSprop
 
 # Our input feature map is 150x150x3: 150x150 for the image pixels, and 3 for
 # the three color channels: R, G, and B
